@@ -1,35 +1,40 @@
-name: Deploy Nginx
+name: Build & Push Docker to Artifact Registry
 
 on:
   push:
     branches:
-      - 'main'
+      - main
 
 jobs:
-  deploy:
+  push-to-artifact-registry:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # ✅ Step 1: Authenticate to Google Cloud
+      # ✅ Authenticate to Google Cloud
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
 
-      # ✅ Step 2: Set up the gcloud CLI
-      - name: Install gcloud CLI
+      # ✅ Setup gcloud CLI
+      - name: Setup gcloud CLI
         uses: google-github-actions/setup-gcloud@v1
         with:
           project_id: ${{ secrets.GOOGLE_PROJECT }}
 
-      # ✅ Step 3: Build and push Docker image to Artifact Registry
-      - name: Build and Push Docker image
+      # ✅ Build & push Docker image
+      - name: Build and Push Docker Image to Artifact Registry
         env:
-          GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+          REGION: us-west1
+          PROJECT_ID: ${{ secrets.GOOGLE_PROJECT }}
+          REPO_NAME: demo
+          IMAGE_NAME: nginx
         run: |
-          gcloud auth configure-docker us-west1-docker.pkg.dev
-          docker build -t us-west1-docker.pkg.dev/$GOOGLE_PROJECT/demo/nginx:latest .
-          docker push us-west1-docker.pkg.dev/$GOOGLE_PROJECT/demo/nginx:latest
+          gcloud auth configure-docker $REGION-docker.pkg.dev
+
+          docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME:latest .
+
+          docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME:latest
