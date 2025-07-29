@@ -28,9 +28,9 @@ jobs:
       # ✅ Build & push Docker image
       - name: Build and Push Docker Image to Artifact Registry
         env:
-          REGION: us-west1
+          REGION: us-central1
           PROJECT_ID: ${{ secrets.GOOGLE_PROJECT }}
-          REPO_NAME: demo
+          REPO_NAME: genworxdemo
           IMAGE_NAME: nginx
         run: |
           gcloud auth configure-docker $REGION-docker.pkg.dev
