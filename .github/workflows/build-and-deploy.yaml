@@ -32,8 +32,8 @@ jobs:
           GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
         run: |
           gcloud auth configure-docker us-central1-docker.pkg.dev
-          docker build -t us-central1-docker.pkg.dev/$GOOGLE_PROJECT/demo/nginx:latest .
-          docker push us-central1-docker.pkg.dev/$GOOGLE_PROJECT/demo/nginx:latest
+          docker build -t us-central1-docker.pkg.dev/$GOOGLE_PROJECT/genworxdemo/nginx:latest .
+          docker push us-central1-docker.pkg.dev/$GOOGLE_PROJECT/genworxdemo/nginx:latest
 
       # ✅ Deploy to GKE Autopilot
       - name: Deploy to GKE
