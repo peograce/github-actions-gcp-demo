@@ -3,36 +3,48 @@ name: Deploy Nginx
 on:
   push:
     branches:
-    - 'main'
+      - 'main'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: code checkout
-      uses: actions/checkout@v2
+      # ✅ Auth using Service Account JSON key
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
 
-    - name: install the gcloud cli
-      uses: google-github-actions/setup-gcloud@v0
-      with:
-        project_id: ${{ secrets.GOOGLE_PROJECT }}
-        service_account_key: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-        install_components: 'gke-gcloud-auth-plugin'
-        export_default_credentials: true
+      # ✅ Install gcloud and GKE auth plugin
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ secrets.GOOGLE_PROJECT }}
+          install_components: gke-gcloud-auth-plugin
 
-    - name: build and push the docker image
-      env:
-        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
-      run: |
-        gcloud auth configure-docker us-central1-docker.pkg.dev
-        docker build -t us-central1-docker.pkg.dev/$GOOGLE_PROJECT/demo/nginx:latest .
-        docker push us-central1-docker.pkg.dev/$GOOGLE_PROJECT/demo/nginx:latest
+      # ✅ Build and Push Docker image to Artifact Registry
+      - name: Build and Push Docker Image
+        env:
+          GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        run: |
+          gcloud auth configure-docker us-central1-docker.pkg.dev
+          docker build -t us-central1-docker.pkg.dev/$GOOGLE_PROJECT/demo/nginx:latest .
+          docker push us-central1-docker.pkg.dev/$GOOGLE_PROJECT/demo/nginx:latest
 
-    - name: deploy to gke
-      env:
-        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
-      run: |
-        gcloud container clusters get-credentials autopilot-cluster-1 --region us-central1
-        sed -i "s/GOOGLE_PROJECT/$GOOGLE_PROJECT/g" resources.yaml
-        kubectl apply -f resources.yaml
+      # ✅ Deploy to GKE Autopilot
+      - name: Deploy to GKE
+        env:
+          GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+        run: |
+          # Authenticate with GKE Autopilot
+          gcloud container clusters get-credentials autopilot-cluster-1 --region us-central1
+
+          # Replace placeholder in resources.yaml with actual project ID
+          sed -i "s/GOOGLE_PROJECT/$GOOGLE_PROJECT/g" resources.yaml
+
+          # Apply the Kubernetes config
+          kubectl apply -f resources.yaml
