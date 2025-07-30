@@ -48,3 +48,5 @@ jobs:
 
           # Apply the Kubernetes config
           kubectl apply -f resources.yaml
+      - name : Get services
+        run: kubectl get svc
